@@ -23,6 +23,7 @@ async function run() {
     // console.log('database is connected');
     const database = client.db("supple_smile");
     const lipsticksCollection = database.collection("lipsticks");
+    // const inventory = database.collection("inventory");
     const orderCollection = database.collection("orders");
     const reviewCollection = database.collection("review");
     const usersCollection = database.collection("users");
@@ -46,6 +47,19 @@ async function run() {
     // POST api for lipsticks order
     app.post("/orders", async (req, res) => {
       const order = req.body;
+      const ordersProduct = order.orderProducts;
+
+      if (ordersProduct.length) {
+        for (const product of ordersProduct) {
+          console.log({ product });
+          const newData = await lipsticksCollection.updateMany(
+            { _id: ObjectId(product._id) },
+            { $inc: { quantity: -product.quantity } }
+          );
+          console.log({ newData });
+        }
+      }
+
       const result = await orderCollection.insertOne(order);
       // console.log(result);
       res.send(result);
@@ -90,6 +104,17 @@ async function run() {
       // console.log(id, 'get id');
       const query = { _id: ObjectId(id) };
       const singleLipstick = await lipsticksCollection.findOne(query);
+      res.json(singleLipstick);
+    });
+
+    // UPDATE SINGLE LIPSTICK
+    app.put("/lipsticks/:id", async (req, res) => {
+      const id = req.params.id;
+      const body = req.body;
+      const query = { _id: ObjectId(id) };
+      const singleLipstick = await lipsticksCollection.updateOne(query, {
+        $set: body,
+      });
       res.json(singleLipstick);
     });
 
