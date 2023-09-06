@@ -123,14 +123,27 @@ async function run() {
       const email = req.query.email;
       if (email) {
         const query = { email: email };
-        const cursor = orderCollection.find(query);
+        const cursor = orderCollection.find(query).sort({ orderDate: -1 });
         const myOrders = await cursor.toArray();
         res.json(myOrders);
       } else {
-        const cursor = orderCollection.find({});
+        const cursor = orderCollection.find({}).sort({ orderDate: -1 });
         const orders = await cursor.toArray();
         res.json(orders);
       }
+    });
+
+    // UPDATE SINGLE ORDER STATUS
+    app.put("/orders/:id", async (req, res) => {
+      const id = req.params.id;
+      const { status } = req.body;
+
+      const result = await orderCollection.updateOne(
+        { _id: ObjectId(id) },
+        { $set: { status } },
+        { upsert: true }
+      );
+      res.json(result);
     });
 
     // GET API FOR ADMIN VERIFICATION
